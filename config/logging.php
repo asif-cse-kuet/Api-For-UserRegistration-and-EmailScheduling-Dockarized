@@ -126,6 +126,14 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'email' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/email.log'), // Log file for email-related logs
+            'level' => 'debug', // You can adjust the log level as needed
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];

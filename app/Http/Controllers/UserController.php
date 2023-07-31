@@ -19,25 +19,30 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-        // Validate the request data
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|unique:users,email'
-        ]);
+        try {
+            // Validate the request data
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:users,email'
+            ]);
 
-        // If validation fails, return error response
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 422);
+            // If validation fails, return error response
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 422);
+            }
+
+            // Save the user's email to the database
+            $user = new User();
+            $user->email = $request->input('email');
+            $user->save();
+
+            // Send welcome email asynchronously
+            WelcomeEmailJob::dispatch($request->input('email'));
+
+            // Return a success response
+            return response()->json(['message' => 'User registered successfully'], 201);
+        } catch (\Exception $e) {
+            // Handle unexpected errors
+            return response()->json(['error' => 'Something went wrong. Please try again later.'], 500);
         }
-
-        // Save the user's email to the database
-        $user = new User();
-        $user->email = $request->input('email');
-        $user->save();
-
-        // Send welcome email asynchronously
-        WelcomeEmailJob::dispatch($request->input('email'));
-
-        // Return a success response
-        return response()->json(['message' => 'User registered successfully'], 201);
     }
 }
