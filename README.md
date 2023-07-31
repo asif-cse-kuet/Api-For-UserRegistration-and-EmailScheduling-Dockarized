@@ -51,25 +51,25 @@ Notes: This endpoint registers a user by saving their email address to the datab
 Environment Variables
 The following environment variables are used in this project:
 
-APP_NAME: The name of the Laravel application.
-APP_ENV: The environment in which the application is running (e.g., local or production).
-APP_KEY: The application key used for encryption.
-APP_DEBUG: Set to true for debugging mode.
-APP_URL: The base URL of the application.
-DB_CONNECTION: The database connection type (pgsql for PostgreSQL).
-DB_HOST: The database host.
-DB_PORT: The database port.
-DB_DATABASE: The name of the PostgreSQL database.
-DB_USERNAME: The database username.
-DB_PASSWORD: The database password.
-MAIL_MAILER: The mail driver to use (smtp for Gmail API).
-MAIL_HOST: The SMTP host for Gmail API (smtp.gmail.com).
-MAIL_PORT: The SMTP port for Gmail API (587).
-MAIL_USERNAME: The Gmail API email address for sending emails.
-MAIL_PASSWORD: The Gmail API application-specific password.
-MAIL_ENCRYPTION: The encryption type for Gmail API (tls).
-MAIL_FROM_ADDRESS: The email address to be used as the "from" address in sent emails.
-MAIL_FROM_NAME: The name to be used as the "from" name in sent emails.
+APP_NAME: The name of the Laravel application. <br>
+APP_ENV: The environment in which the application is running (e.g., local or production).<br>
+APP_KEY: The application key used for encryption.<br>
+APP_DEBUG: Set to true for debugging mode.<br>
+APP_URL: The base URL of the application.<br>
+DB_CONNECTION: The database connection type (pgsql for PostgreSQL).<br>
+DB_HOST: The database host.<br>
+DB_PORT: The database port.<br>
+DB_DATABASE: The name of the PostgreSQL database.<br>
+DB_USERNAME: The database username.<br>
+DB_PASSWORD: The database password.<br>
+MAIL_MAILER: The mail driver to use (smtp for Gmail API).<br>
+MAIL_HOST: The SMTP host for Gmail API (smtp.gmail.com).<br>
+MAIL_PORT: The SMTP port for Gmail API (587).<br>
+MAIL_USERNAME: The Gmail API email address for sending emails.<br>
+MAIL_PASSWORD: The Gmail API application-specific password.<br>
+MAIL_ENCRYPTION: The encryption type for Gmail API (tls).<br>
+MAIL_FROM_ADDRESS: The email address to be used as the "from" address in sent emails.<br>
+MAIL_FROM_NAME: The name to be used as the "from" name in sent emails.<br>
 
 Contributing
 If you'd like to contribute to this project, please follow these guidelines:
