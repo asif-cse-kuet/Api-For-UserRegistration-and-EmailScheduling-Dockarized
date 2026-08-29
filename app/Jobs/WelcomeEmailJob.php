@@ -2,27 +2,23 @@
 
 namespace App\Jobs;
 
+use App\Services\GmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Services\GmailService;
 
 class WelcomeEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $email;
+    public function __construct(
+        protected string $email
+    ) {}
 
-    public function __construct($email)
+    public function handle(GmailService $gmailService): void
     {
-        $this->email = $email;
-    }
-
-    public function handle()
-    {
-        $gmailService = new GmailService();
         $gmailService->sendWelcomeEmail($this->email);
     }
 }

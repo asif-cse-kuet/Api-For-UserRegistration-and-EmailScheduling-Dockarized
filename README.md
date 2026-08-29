@@ -1,88 +1,136 @@
-# Laravel API for User Registration and Email Sending
+# Laravel User Registration API
 
-## Description
+A RESTful Laravel API that registers users by email and sends a welcome message via SMTP (Gmail-compatible).
 
-This is a RESTful API built with Laravel that allows users to register themselves by providing their email addresses. Upon registration, the API saves the user's email to the database and sends a welcome email using the Gmail API.
+## Features
+
+- Email-only user registration (`POST /api/register`)
+- Welcome email dispatched asynchronously via queue worker
+- PostgreSQL database with Docker Compose
+- Per-email rate limiting (5 requests/minute)
+- Health check endpoint (`GET /api/health`)
+
+## Architecture
+
+```
+RegisterUserRequest → UserController → WelcomeEmailJob → GmailService → Mail (SMTP)
+```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed flow diagram.
 
 ## Prerequisites
 
-Before running this API, ensure you have the following installed on your local machine:
+- Docker and Docker Compose
+- (For local development without Docker) PHP 8.1+, Composer, PostgreSQL
 
--   Docker
--   Docker Compose
+## Quick Start
 
-## Getting Started
+1. Clone the repository.
+2. Copy the environment file:
 
-1. Clone this repository to your local machine.
-2. In the root directory of the project, create a new file named `.env` and copy the contents from `.env.example` into it.
-3. Configure the necessary environment variables in the `.env` file. Make sure to set up the Gmail API credentials and the database connection details.
+   ```bash
+   cp .env.example .env
+   ```
 
-## Installation and Setup
+3. Set `APP_KEY` and mail credentials in `.env`:
 
-To build and run the Docker containers for the Laravel API, execute the following command in the terminal:
+   ```env
+   APP_KEY=base64:...          # run: php artisan key:generate
+   MAIL_USERNAME=your@gmail.com
+   MAIL_PASSWORD=your-app-password
+   ```
+
+   For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833) with SMTP settings already configured in `.env.example`.
+
+4. Start the stack:
+
+   ```bash
+   docker compose up --build
+   ```
+
+5. The API is available at `http://localhost:8000`.
+
+## API Endpoints
+
+### Health Check
+
+- **URL:** `GET /api/health`
+- **Response (200):**
+
+  ```json
+  {
+    "status": "ok",
+    "database": "connected"
+  }
+  ```
+
+### Register a User
+
+- **URL:** `POST /api/register`
+- **Request body:**
+
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+
+- **Success response (201):**
+
+  ```json
+  {
+    "message": "User registration successful.",
+    "data": {
+      "email": "user@example.com"
+    }
+  }
+  ```
+
+- **Validation error (422):**
+
+  ```json
+  {
+    "message": "Validation failed.",
+    "errors": {
+      "email": ["This email address is already registered."]
+    }
+  }
+  ```
+
+## Docker Services
+
+| Service | Description |
+|---------|-------------|
+| `web`   | Laravel app (`php artisan serve` on port 8000) |
+| `queue` | Queue worker processing `WelcomeEmailJob` |
+| `db`    | PostgreSQL 15 |
+
+Migrations run automatically on container startup via `docker/entrypoint.sh`.
+
+## Queue
+
+The default `QUEUE_CONNECTION` is `database`. The `queue` service must be running for welcome emails to send asynchronously. For synchronous sending during development, set `QUEUE_CONNECTION=sync` in `.env`.
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `APP_KEY` | Laravel encryption key |
+| `DB_*` | PostgreSQL connection (defaults target the `db` service) |
+| `QUEUE_CONNECTION` | `database` (default) or `sync` |
+| `MAIL_*` | SMTP settings for sending welcome emails |
+
+## Running Tests
 
 ```bash
-docker-compose up --build
-
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan test
 ```
 
-Once the containers are up and running, you can access the API at http://localhost:8000/.
+Tests use SQLite in-memory (`phpunit.xml`).
 
-API Endpoints
-Register a User
-URL: /api/register
-Method: POST
-Request Body:
-{
-"email": "user@example.com"
-}
+## License
 
-Response:
-Status: 201 Created
-Body:
-{
-"message": "User registration successful.",
-"data": {
-"email": "user@example.com"
-}
-}
-
-Notes: This endpoint registers a user by saving their email address to the database and sends a welcome email to the user.
-Environment Variables
-The following environment variables are used in this project:
-
-APP_NAME: The name of the Laravel application. <br>
-APP_ENV: The environment in which the application is running (e.g., local or production).<br>
-APP_KEY: The application key used for encryption.<br>
-APP_DEBUG: Set to true for debugging mode.<br>
-APP_URL: The base URL of the application.<br>
-DB_CONNECTION: The database connection type (pgsql for PostgreSQL).<br>
-DB_HOST: The database host.<br>
-DB_PORT: The database port.<br>
-DB_DATABASE: The name of the PostgreSQL database.<br>
-DB_USERNAME: The database username.<br>
-DB_PASSWORD: The database password.<br>
-MAIL_MAILER: The mail driver to use (smtp for Gmail API).<br>
-MAIL_HOST: The SMTP host for Gmail API (smtp.gmail.com).<br>
-MAIL_PORT: The SMTP port for Gmail API (587).<br>
-MAIL_USERNAME: The Gmail API email address for sending emails.<br>
-MAIL_PASSWORD: The Gmail API application-specific password.<br>
-MAIL_ENCRYPTION: The encryption type for Gmail API (tls).<br>
-MAIL_FROM_ADDRESS: The email address to be used as the "from" address in sent emails.<br>
-MAIL_FROM_NAME: The name to be used as the "from" name in sent emails.<br>
-
-Contributing
-If you'd like to contribute to this project, please follow these guidelines:
-
-1. Fork the repository.
-2. Create a new branch for your changes.
-3. Make your contributions.
-4. Commit your changes and push them to your forked repository.
-5. Submit a pull request.
-
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-Please make sure to replace the placeholders with appropriate values, such as API endpoint descriptions, environment variables, and other relevant information specific to your project.
-
-Feel free to customize and expand the README.md as needed to provide comprehensive documentation for your Laravel API project.
+MIT

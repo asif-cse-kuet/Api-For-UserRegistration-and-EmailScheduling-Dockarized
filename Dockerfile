@@ -1,33 +1,24 @@
-# Use the official PHP image as the base image
-FROM php:8.1-fpm
+FROM php:8.3-cli
 
-# Set the working directory inside the container
 WORKDIR /var/www/html
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     zip \
-    unzip
+    unzip \
+    && docker-php-ext-install pdo pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy the application files to the container
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 COPY . .
 
-# Install Composer (if not already installed)
-RUN if [ ! -e /usr/local/bin/composer ]; then \
-    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"; \
-    php composer-setup.php --install-dir=/usr/local/bin --filename=composer; \
-    php -r "unlink('composer-setup.php');"; \
-    fi
+RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
 
-# Install application dependencies using Composer
-RUN composer install
+EXPOSE 8000
 
-# Expose port 9000 for PHP-FPM
-EXPOSE 9000
-
-# Start PHP-FPM server
-CMD ["php-fpm"]
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

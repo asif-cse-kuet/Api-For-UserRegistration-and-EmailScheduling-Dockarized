@@ -2,47 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use App\Models\User;
-use App\Services\GmailService;
+use App\Http\Requests\RegisterUserRequest;
 use App\Jobs\WelcomeEmailJob;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    private $gmailService;
-
-    public function __construct(GmailService $gmailService)
+    public function register(RegisterUserRequest $request): JsonResponse
     {
-        $this->gmailService = $gmailService;
-    }
+        $user = User::create([
+            'email' => $request->validated('email'),
+        ]);
 
-    public function register(Request $request)
-    {
-        try {
-            // Validate the request data
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|email|unique:users,email'
-            ]);
+        WelcomeEmailJob::dispatch($user->email);
 
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 422);
-            }
-
-            // Save the user's email to the database
-            $user = new User();
-            $user->email = $request->input('email');
-            $user->save();
-
-            // Send welcome email asynchronously
-            WelcomeEmailJob::dispatch($request->input('email'));
-
-            // Return a success response
-            return response()->json(['message' => 'User registered successfully'], 201);
-        } catch (\Exception $e) {
-            // Handle unexpected errors
-            return response()->json(['error' => 'Something went wrong. Please try again later.'], 500);
-        }
+        return response()->json([
+            'message' => 'User registration successful.',
+            'data' => [
+                'email' => $user->email,
+            ],
+        ], 201);
     }
 }

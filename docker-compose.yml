@@ -1,37 +1,58 @@
-version: '3'
 services:
   web:
     build: .
     ports:
-      - "8000:9000"
+      - "8000:8000"
     volumes:
       - .:/var/www/html
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - APP_KEY=your_app_key
-      - DB_CONNECTION=pgsql
-      - DB_HOST=your_db_host
-      - DB_PORT=5432
-      - DB_DATABASE=your_db_name
-      - DB_USERNAME=your_db_username
-      - DB_PASSWORD=your_db_password
-      - MAIL_MAILER=smtp
-      - MAIL_HOST=your_smtp_host
-      - MAIL_PORT=587
-      - MAIL_USERNAME=your_smtp_username
-      - MAIL_PASSWORD=your_smtp_password
-      - MAIL_ENCRYPTION=tls
-      - MAIL_FROM_ADDRESS=hello@example.com
-      - MAIL_FROM_NAME="${APP_NAME}"
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+      QUEUE_CONNECTION: database
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  queue:
+    build: .
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+      QUEUE_CONNECTION: database
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    command: php artisan queue:work --sleep=3 --tries=3
 
   db:
-    image: postgres:latest
+    image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=your_db_username
-      - POSTGRES_PASSWORD=your_db_password
-      - POSTGRES_DB=your_db_name
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: laravel
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laravel -d laravel"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
